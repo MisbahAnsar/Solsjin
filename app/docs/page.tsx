@@ -1,40 +1,25 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
-import DocsSidebar from "@/components/DocsSidebar";
+import { useState } from "react";
+import DocsSidebar from "@/components/ui/DocsSidebar";
+import DocsContent from "@/components/ui/DocsContent";
 
 export default function Docs() {
+  const [activeItem, setActiveItem] = useState("connect-wallet");
+
   return (
     <div className="bg-[#FFFCF3] min-h-screen w-full">
-      <Navbar variant="docs" />
+      {/* Sidebar - Fixed to left */}
+      <DocsSidebar activeItem={activeItem} onItemClick={setActiveItem} />
       
-      <div className="flex justify-center h-[calc(100vh-100px)]">
-        <div className="flex max-w-5xl w-full">
-          {/* Sidebar */}
-          <DocsSidebar />
-          
-          {/* Main Content */}
-          <div className="flex-1 overflow-y-auto px-12 py-8">
-            {/* Header */}
-            <h1 className="text-4xl font-bold mb-4">Connect Wallet</h1>
-            
-            {/* Description */}
-            <p className="text-gray-700 mb-8 leading-relaxed">
-              The Connect Wallet Dialog component is a dialog window that allows
-              users to connect their wallet via{" "}
-              <span className="underline">Solana Wallet Adapter</span>.
-            </p>
-            
-            {/* Two Gray Buttons */}
-            <div className="flex gap-4 mb-8">
-              <div className="w-24 h-10 bg-gray-400 rounded-lg"></div>
-              <div className="w-24 h-10 bg-gray-400 rounded-lg"></div>
+      {/* Main Content - Offset for fixed sidebar */}
+      <div className="ml-64 min-h-screen">
+        <div className="flex justify-center h-screen max-w-7xl mx-auto p-6">
+          <div className="flex w-full bg-[#FFFCF3] rounded-lg border-2 border-[#8B7355]/40 overflow-hidden shadow-sm relative">
+            {/* Main Content */}
+            <div className="flex-1 bg-[#FFFCF3] relative">
+              <DocsContent activeItem={activeItem} />
             </div>
-            
-            {/* Connect Wallet Button */}
-            <button className="bg-[#C4F582] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#b5e673] transition-colors">
-              Connect Wallet
-            </button>
           </div>
         </div>
       </div>
