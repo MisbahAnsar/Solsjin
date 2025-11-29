@@ -273,14 +273,12 @@ export default function ConnectWallet() {
 
   return (
     <>
-      <div className="bg-gray-800 rounded-lg p-12 flex items-center justify-center my-8">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-black/90 transition-colors"
-        >
-          Connect Wallet
-        </button>
-      </div>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-black/90 transition-colors"
+      >
+        Connect Wallet
+      </button>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="flex flex-col h-full max-h-[70vh] font-sans">
