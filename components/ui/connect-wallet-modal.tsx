@@ -67,7 +67,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
         <div className="pointer-events-none absolute inset-0 bg-black/20 blur-3xl opacity-70" />
         <div
           ref={modalRef}
-          className="relative bg-white rounded-3xl max-h-[65vh] overflow-hidden shadow-[0_25px_90px_rgba(0,0,0,0.3)] border border-black/5"
+          className="relative bg-white rounded-3xl h-[65vh] max-h-[65vh] flex flex-col overflow-hidden shadow-[0_25px_90px_rgba(0,0,0,0.3)] border border-black/5 font-sans"
         >
           {children}
         </div>

@@ -37,14 +37,14 @@ export default function DocsSidebar({ activeItem, onItemClick, isOpen, onToggle 
     return "32px";
   };
   const getLineColor = (id: string | undefined) => {
-    if (isActive(id)) return "bg-purple-500";
-    if (isHovered(id)) return "bg-purple-500";
+    if (isActive(id)) return "bg-orange-300";
+    if (isHovered(id)) return "bg-orange-300";
     return "bg-zinc-600/20";
   };
   const getTextColor = (id: string | undefined) => {
-    if (isActive(id)) return "text-purple-500 opacity-100";
-    if (isHovered(id)) return "text-purple-500 opacity-100";
-    return "text-zinc-300 opacity-40";
+    if (isActive(id)) return "text-orange-300 opacity-100";
+    if (isHovered(id)) return "text-orange-300 opacity-100";
+    return "text-white/70";
   };
 
   return (

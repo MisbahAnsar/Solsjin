@@ -1,3 +1,6 @@
+// Rendering the Connect Wallet component in the docs page.(this includes modal as well)
+
+
 "use client";
 
 import ConnectWallet from "@/components/NewDesigns/connect-wallet";
