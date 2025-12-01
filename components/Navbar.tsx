@@ -11,9 +11,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
     <div className="w-full flex justify-center pt-6">
       <nav className={`${maxWidth} w-full ${bgColor} ${rounded} px-4 py-1.5 flex items-center justify-between`}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gray-800 rounded-md">
-            {/* Logo placeholder - replace with your logo image */}
-          </div>
+          <img src="/logo.png" alt="Solsjin Logo" className="w-8 h-8 rounded-md object-cover" />
           <div 
             className="font-semibold"
             style={{

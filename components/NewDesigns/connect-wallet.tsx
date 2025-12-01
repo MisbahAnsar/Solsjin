@@ -212,15 +212,15 @@ export default function ConnectWallet() {
             // Don't close modal immediately - wait for connection status
           }
         }}
-        className={`w-full flex items-center gap-2.5 rounded-xl py-2 transition-all cursor-pointer ${
+        className={`w-full flex items-center gap-2.5 rounded-xl py-2 transition-all cursor-pointer px-2 ${
           isInstalled
-            ? "hover:shadow-sm"
-            : "hover:bg-white"
+            ? "hover:shadow-sm hover:bg-zinc-200"
+            : "hover:bg-zinc-200"
         }`}
       >
         {walletIcon}
         <div className="flex-1 text-left min-w-0">
-          <span className="font-medium text-sm text-gray-900 font-sans">
+          <span className="font-semibold text-sm text-gray-900 balsamiq-sans-bold">
             {display.name}
           </span>
         </div>
@@ -238,7 +238,7 @@ export default function ConnectWallet() {
     emptyMessage?: string;
   }) => (
     <div>
-      <h4 className={`text-xs font-semibold uppercase tracking-wider mb-2 font-sans ${
+      <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 balsamiq-sans-bold px-2 ${
         title === "Installed" ? "text-blue-600" : "text-gray-500"
       }`}>
         {title}
@@ -276,9 +276,9 @@ export default function ConnectWallet() {
       </button>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <div className="flex flex-col h-full font-sans p-8 box-border">
+        <div className="flex flex-col h-full font-sans p-4 box-border">
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
-            <h2 className="text-2xl font-semibold text-gray-900 font-sans">
+            <h2 className="text-xl font-bold text-black tracking-tight balsamiq-sans-bold px-2">
               Connect a Wallet
             </h2>
             <button
@@ -291,9 +291,9 @@ export default function ConnectWallet() {
           </div>
 
           <div className="flex flex-1 overflow-hidden min-h-0">
-            <aside className="w-48 border-r border-gray-200 flex-shrink-0 flex flex-col min-h-0 overflow-hidden">
+            <aside className="w-52 border-r border-gray-200 flex-shrink-0 flex flex-col min-h-0 overflow-hidden">
 
-              <div className="flex-1 overflow-y-auto py-4 pr-4 space-y-4 min-h-0">
+              <div className="flex-1 overflow-y-auto py-4 pr-1 space-y-4 min-h-0">
                 <WalletSection
                   title="Installed"
                   wallets={installedWallets}
@@ -310,10 +310,10 @@ export default function ConnectWallet() {
                   {connectionStatus === "connecting" && (
                     <>
                       <div className="w-16 h-16 border-4 border-gray-200 border-t-[#C4F582] rounded-full animate-spin mb-4"></div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 font-sans">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">
                         Connecting {walletDisplayMap[selectedWalletName]?.name || selectedWalletName} wallet...
                       </h3>
-                      <p className="text-sm text-gray-600 text-center font-sans">
+                      <p className="text-sm text-gray-600 text-center balsamiq-sans-regular">
                         Please approve the connection request in your wallet
                       </p>
                     </>
@@ -325,10 +325,10 @@ export default function ConnectWallet() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 font-sans">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">
                         You are connected!
                       </h3>
-                      <p className="text-sm text-gray-600 text-center mb-4 font-sans">
+                      <p className="text-sm text-gray-600 text-center mb-4 balsamiq-sans-regular">
                         Your wallet is now connected to this application
                       </p>
                       <button
@@ -337,7 +337,7 @@ export default function ConnectWallet() {
                           setConnectionStatus("idle");
                           setSelectedWalletName(null);
                         }}
-                        className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors font-sans"
+                        className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors balsamiq-sans-bold"
                       >
                         Continue
                       </button>
@@ -350,10 +350,10 @@ export default function ConnectWallet() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 font-sans">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">
                         Retry!
                       </h3>
-                      <p className="text-sm text-gray-600 text-center mb-4 font-sans">
+                      <p className="text-sm text-gray-600 text-center mb-4 balsamiq-sans-regular">
                         Connection was canceled. Please try again.
                       </p>
                       <button
@@ -361,7 +361,7 @@ export default function ConnectWallet() {
                           setConnectionStatus("idle");
                           setSelectedWalletName(null);
                         }}
-                        className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors font-sans"
+                        className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors balsamiq-sans-bold"
                       >
                         Try Again
                       </button>
@@ -371,35 +371,27 @@ export default function ConnectWallet() {
               ) : (
                 <div className="max-w-sm space-y-4 flex flex-col items-center text-center">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3 font-sans">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 balsamiq-sans-bold">
                       What is a Wallet?
                     </h3>
                   </div>
 
-                  <div className="space-y-4 w-full flex flex-col items-center">
-                    {infoSections.map((section) => (
-                      <div
-                        key={section.title}
-                        className={`flex items-start gap-4 text-left max-w-xs w-full ${
-                          section.reverse ? "flex-row-reverse" : ""
-                        }`}
-                      >
-                        <div
-                          className={`w-16 h-16 bg-gradient-to-br ${section.gradient} rounded-lg flex-shrink-0`}
-                        ></div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-1.5 font-sans">{section.title}</h4>
-                          <p className="text-xs text-gray-600 leading-relaxed font-sans">{section.description}</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="w-full flex flex-col items-center">
+                    <img 
+                      src="/logo.png" 
+                      alt="Wallet preview" 
+                      className="w-40 h-40 rounded-xl mb-4 object-cover shadow-sm"
+                    />
+                    <p className="text-sm text-gray-600 leading-relaxed balsamiq-sans-regular max-w-[280px]">
+                      Your secure gateway to store, send, and receive digital assets.
+                    </p>
                   </div>
 
                   <div className="pt-2 space-y-2 flex flex-col items-center w-full">
-                    <button className="bg-blue-500 text-black py-2.5 px-6 rounded-lg font-medium hover:bg-blue-600 transition-colors text-sm font-sans">
+                    <button className="bg-blue-500 text-black py-2.5 px-6 rounded-lg font-medium hover:bg-blue-600 transition-colors text-sm balsamiq-sans-bold">
                       Get a Wallet
                     </button>
-                    <button className="text-blue-500 font-medium hover:text-blue-600 transition-colors text-sm font-sans">
+                    <button className="text-blue-500 font-medium hover:text-blue-600 transition-colors text-sm balsamiq-sans-bold">
                       Learn More
                     </button>
                   </div>

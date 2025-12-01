@@ -2,7 +2,7 @@ import { Github, Copy } from "lucide-react";
 
 export default function Hero() {
   return (
-    <div className="flex flex-col items-center justify-center mt-28">
+    <div className="flex flex-col items-center justify-center min-h-screen w-full">
       <h1 
         className="font-extrabold leading-[0.8]" 
         style={{ 
