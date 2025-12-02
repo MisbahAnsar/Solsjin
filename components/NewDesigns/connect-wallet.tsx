@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
 import { useWallet, type Wallet } from "@solana/wallet-adapter-react";
 import Modal from "@/components/ui/connect-wallet-modal";
-import { X } from "lucide-react";
+import { X, Copy, LogOut, Check } from "lucide-react";
 
 type WalletCategory = "popular" | "more";
 
@@ -164,11 +164,14 @@ const walletDisplayMap: Record<string, WalletDisplay> = {
 };
 
 export default function ConnectWallet() {
-  const { wallets, select, connecting, connected, publicKey } = useWallet();
+  const { wallets, select, connecting, connected, publicKey, wallet, disconnect } = useWallet();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWalletName, setSelectedWalletName] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "retry">("idle");
   const [selectedWalletForInstall, setSelectedWalletForInstall] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Separate wallets by readyState (following the reference pattern)
   const { installedWallets, popularWallets, moreWallets } = useMemo(() => {
@@ -266,6 +269,76 @@ export default function ConnectWallet() {
       setSelectedWalletForInstall(null);
     }
   }, [isModalOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isDropdownOpen]);
+
+  // Handle copy address
+  const handleCopyAddress = async () => {
+    if (publicKey) {
+      await navigator.clipboard.writeText(publicKey.toBase58());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Handle disconnect
+  const handleDisconnect = async () => {
+    await disconnect();
+    setIsDropdownOpen(false);
+  };
+
+  // Truncate address helper
+  const truncateAddress = (address: string) => {
+    return `${address.slice(0, 12)}...`;
+  };
+
+  // Get current wallet icon (without background styling)
+  const getCurrentWalletIcon = () => {
+    if (!wallet) return null;
+    
+    const display = walletDisplayMap[wallet.adapter.name];
+    
+    // Try to get the wallet icon URL from adapter first
+    if (wallet.adapter.icon) {
+      return (
+        <img
+          src={wallet.adapter.icon}
+          alt={wallet.adapter.name}
+          className="w-5 h-5 object-contain rounded"
+        />
+      );
+    }
+    
+    // Fallback: extract image URL from display map if available
+    if (display) {
+      const walletName = wallet.adapter.name;
+      if (walletName === "Phantom") {
+        return <img src="https://phantom.app/img/logo.png" alt="Phantom" className="w-5 h-5 object-contain rounded" />;
+      } else if (walletName === "Solflare") {
+        return <img src="https://solflare.com/favicon.ico" alt="Solflare" className="w-5 h-5 object-contain rounded" />;
+      } else if (walletName === "Coinbase Wallet") {
+        return <img src="https://www.coinbase.com/favicon.ico" alt="Coinbase" className="w-5 h-5 object-contain rounded" />;
+      } else if (walletName === "BitKeep" || walletName === "Bitget Wallet") {
+        return <img src="https://web3.bitget.com/favicon.ico" alt="Bitget" className="w-5 h-5 object-contain rounded" />;
+      }
+      // For wallets without images (Avana, Alpha), show simple text
+      return <span className="text-xs font-semibold">{walletName.charAt(0)}</span>;
+    }
+    
+    return null;
+  };
 
   const WalletItem = ({
     wallet,
@@ -391,17 +464,112 @@ export default function ConnectWallet() {
 
   return (
     <>
-      <div className="flex flex-col items-start gap-2">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-black/90 transition-colors"
-        >
-          {connected && publicKey ? "Wallet Connected" : "Connect Wallet"}
-        </button>
-        {connected && publicKey && (
-          <div className="text-xs text-gray-600 font-mono">
-            Connected: {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+      <style jsx>{`
+        @keyframes expandDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px) scaleY(0.95);
+            transform-origin: top center;
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scaleY(1);
+            transform-origin: top center;
+          }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .dropdown-animate {
+          animation: expandDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dropdown-item-animate {
+          animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dropdown-item-animate:nth-child(1) {
+          animation-delay: 0.05s;
+        }
+
+        .dropdown-item-animate:nth-child(2) {
+          animation-delay: 0.1s;
+        }
+      `}</style>
+      
+      <div className="relative" ref={dropdownRef}>
+        {connected && publicKey ? (
+          <div className="relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className={`bg-black text-white px-4 py-2.5 font-medium hover:bg-black/90 transition-all duration-200 flex items-center gap-2.5 ${
+                isDropdownOpen 
+                  ? 'rounded-t-lg shadow-lg' 
+                  : 'rounded-lg'
+              }`}
+            >
+              <div className="flex items-center justify-center w-5 h-5">
+                {getCurrentWalletIcon()}
+              </div>
+              <span className="font-mono text-sm tracking-tight">
+                {truncateAddress(publicKey.toBase58())}
+              </span>
+              <svg 
+                className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {isDropdownOpen && (
+              <div className="absolute top-[calc(100%-4px)] left-0 right-0 bg-black text-white rounded-b-lg shadow-xl overflow-hidden z-50 dropdown-animate">
+                <div className="border-t border-gray-700"></div>
+                <button
+                  onClick={handleCopyAddress}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors flex items-center gap-2.5 text-sm dropdown-item-animate"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4 text-green-400" />
+                      <span className="text-green-400 font-medium">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 text-gray-300" />
+                      <span className="text-gray-100">Copy Address</span>
+                    </>
+                  )}
+                </button>
+                <div className="border-t border-gray-700"></div>
+                <button
+                  onClick={handleDisconnect}
+                  className="w-full px-4 py-3 text-left hover:bg-red-900/20 transition-colors flex items-center gap-2.5 text-sm text-red-400 dropdown-item-animate"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Disconnect</span>
+                </button>
+              </div>
+            )}
           </div>
+        ) : (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-black/90 transition-colors"
+          >
+            Connect Wallet
+          </button>
         )}
       </div>
 
