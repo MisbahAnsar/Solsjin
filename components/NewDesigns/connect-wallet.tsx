@@ -5,27 +5,12 @@ import { WalletReadyState } from "@solana/wallet-adapter-base";
 import { useWallet, type Wallet } from "@solana/wallet-adapter-react";
 import Modal from "@/components/ui/connect-wallet-modal";
 import { X, Copy, LogOut, Check } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 type WalletCategory = "popular" | "more";
 
 type WalletWithDisplay = Wallet & { display: WalletDisplay };
 
-const infoSections = [
-  {
-    title: "A Home for your Digital Assets",
-    description:
-      "Wallets are used to send, receive, store, and display digital assets like SOL and NFTs on the Solana blockchain.",
-    gradient: "from-blue-400 to-purple-500",
-    reverse: false,
-  },
-  {
-    title: "A New Way to Log In",
-    description:
-      "Instead of creating new accounts and passwords on every website, just connect your Solana wallet to authenticate and interact with dApps seamlessly.",
-    gradient: "from-orange-400 to-pink-500",
-    reverse: true,
-  },
-] as const;
 
 interface WalletDisplay {
   id: string;
@@ -34,131 +19,62 @@ interface WalletDisplay {
   category: WalletCategory;
 }
 
-// Create a map of wallet adapter names to display info
+const createWalletIcon = (imgSrc: string, alt: string, gradient: string, fallback: string) => (
+  <div className={`w-7 h-7 rounded-lg ${gradient} flex items-center justify-center text-white font-semibold text-xs shadow-inner`}>
+    <img
+      src={imgSrc}
+      alt={alt}
+      className="w-full h-full object-contain rounded-lg"
+      onError={(e) => {
+        const target = e.target as HTMLImageElement;
+        target.style.display = "none";
+        if (target.parentElement) target.parentElement.textContent = fallback;
+      }}
+    />
+  </div>
+);
+
 const walletDisplayMap: Record<string, WalletDisplay> = {
   Phantom: {
     id: "phantom",
     name: "Phantom",
-    icon: (
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
-        <img
-          src="https://phantom.app/img/logo.png"
-          alt="Phantom"
-          className="w-full h-full object-contain rounded-lg"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-            if (target.parentElement) {
-              target.parentElement.textContent = "P";
-            }
-          }}
-        />
-      </div>
-    ),
+    icon: createWalletIcon("https://phantom.app/img/logo.png", "Phantom", "bg-gradient-to-br from-purple-500 to-purple-600", "P"),
     category: "popular",
   },
   Solflare: {
     id: "solflare",
     name: "Solflare",
-    icon: (
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
-        <img
-          src="https://solflare.com/favicon.ico"
-          alt="Solflare"
-          className="w-full h-full object-contain rounded-lg"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-            if (target.parentElement) {
-              target.parentElement.textContent = "S";
-            }
-          }}
-        />
-      </div>
-    ),
+    icon: createWalletIcon("https://solflare.com/favicon.ico", "Solflare", "bg-gradient-to-br from-orange-400 to-red-500", "S"),
     category: "popular",
   },
   Avana: {
     id: "avane",
     name: "Avana",
-    icon: (
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
-        A
-      </div>
-    ),
+    icon: <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-xs shadow-inner">A</div>,
     category: "more",
   },
   Alpha: {
     id: "alpha",
     name: "Alpha",
-    icon: (
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
-        α
-      </div>
-    ),
+    icon: <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-semibold text-xs shadow-inner">α</div>,
     category: "more",
   },
   "Coinbase Wallet": {
     id: "coinbase",
     name: "Coinbase",
-    icon: (
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
-        <img
-          src="https://www.coinbase.com/favicon.ico"
-          alt="Coinbase"
-          className="w-full h-full object-contain rounded-lg"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-            if (target.parentElement) {
-              target.parentElement.textContent = "C";
-            }
-          }}
-        />
-      </div>
-    ),
+    icon: createWalletIcon("https://www.coinbase.com/favicon.ico", "Coinbase", "bg-gradient-to-br from-blue-600 to-blue-700", "C"),
     category: "more",
   },
   BitKeep: {
     id: "bitget",
     name: "Bitget",
-    icon: (
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
-        <img
-          src="https://web3.bitget.com/favicon.ico"
-          alt="Bitget"
-          className="w-full h-full object-contain rounded-lg"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-            if (target.parentElement) {
-              target.parentElement.textContent = "B";
-            }
-          }}
-        />
-      </div>
-    ),
+    icon: createWalletIcon("https://web3.bitget.com/favicon.ico", "Bitget", "bg-gradient-to-br from-blue-500 to-blue-600", "B"),
     category: "more",
   },
   "Bitget Wallet": {
     id: "bitget",
     name: "Bitget",
-    icon: (
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
-        <img
-          src="https://web3.bitget.com/favicon.ico"
-          alt="Bitget"
-          className="w-full h-full object-contain rounded-lg"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-            if (target.parentElement) {
-              target.parentElement.textContent = "B";
-            }
-          }}
-        />
-      </div>
-    ),
+    icon: createWalletIcon("https://web3.bitget.com/favicon.ico", "Bitget", "bg-gradient-to-br from-blue-500 to-blue-600", "B"),
     category: "more",
   },
 };
@@ -173,72 +89,35 @@ export default function ConnectWallet() {
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Separate wallets by readyState (following the reference pattern)
   const { installedWallets, popularWallets, moreWallets } = useMemo(() => {
     type WalletWithDisplay = Wallet & { display: WalletDisplay };
     const installed: WalletWithDisplay[] = [];
     const popular: WalletWithDisplay[] = [];
     const more: WalletWithDisplay[] = [];
-
-    console.log("=== WALLET DETECTION DEBUG ===");
-    console.log("Total wallets from adapter:", wallets.length);
     
     for (const wallet of wallets) {
-      console.log(`\n📍 Wallet: ${wallet.adapter.name}`);
-      console.log(`   ReadyState: ${wallet.readyState} (Installed = ${WalletReadyState.Installed})`);
-      console.log(`   Is Installed: ${wallet.readyState === WalletReadyState.Installed}`);
-      
       const display = walletDisplayMap[wallet.adapter.name];
-      if (!display) {
-        console.log(`   ⚠️ No display mapping found`);
-        continue;
-      }
+      if (!display) continue;
 
       const walletWithDisplay: WalletWithDisplay = { ...wallet, display };
 
       if (wallet.readyState === WalletReadyState.Installed) {
-        console.log(`   ✅ Adding to INSTALLED section`);
         installed.push(walletWithDisplay);
-      } else {
-        console.log(`   ❌ NOT installed (skipping)`);
       }
 
-      if (display.category === "popular") {
-        popular.push(walletWithDisplay);
-      } else {
-        more.push(walletWithDisplay);
-      }
+      display.category === "popular" ? popular.push(walletWithDisplay) : more.push(walletWithDisplay);
     }
 
-    console.log("\n📊 FINAL RESULTS:");
-    console.log("Installed wallets:", installed.map(w => w.adapter.name));
-    console.log("Popular wallets:", popular.map(w => w.adapter.name));
-    console.log("More wallets:", more.map(w => w.adapter.name));
-
-    // Add manual Bitget install option if not already in any list
-    const hasBitgetEntry =
-      installed.some((wallet) => wallet.display.id === "bitget") ||
-      popular.some((wallet) => wallet.display.id === "bitget") ||
-      more.some((wallet) => wallet.display.id === "bitget");
-
-    if (!hasBitgetEntry && walletDisplayMap.BitKeep) {
-      console.log("⚠️ Bitget not detected, adding manual install option");
-      const bitgetDisplay = walletDisplayMap.BitKeep;
-      const manualBitget: WalletWithDisplay = {
-        adapter: {
-          name: "Bitget Install",
-          icon: "",
-          url: "https://web3.bitget.com/",
-        } as any,
+    // Add manual Bitget install option if not detected
+    const hasBitget = [...installed, ...popular, ...more].some(w => w.display.id === "bitget");
+    
+    if (!hasBitget && walletDisplayMap.BitKeep) {
+      more.push({
+        adapter: { name: "Bitget Install", icon: "", url: "https://web3.bitget.com/" } as any,
         readyState: WalletReadyState.NotDetected,
-        display: bitgetDisplay,
-      } as WalletWithDisplay;
-      more.push(manualBitget);
-    } else {
-      console.log("✅ Bitget wallet detected in lists");
+        display: walletDisplayMap.BitKeep,
+      } as WalletWithDisplay);
     }
-
-    console.log("=== END DEBUG ===\n");
 
     return { installedWallets: installed, popularWallets: popular, moreWallets: more };
   }, [wallets]);
@@ -304,159 +183,84 @@ export default function ConnectWallet() {
     return `${address.slice(0, 12)}...`;
   };
 
-  // Get current wallet icon (without background styling)
   const getCurrentWalletIcon = () => {
     if (!wallet) return null;
     
-    const display = walletDisplayMap[wallet.adapter.name];
-    
-    // Try to get the wallet icon URL from adapter first
     if (wallet.adapter.icon) {
-      return (
+      return <img src={wallet.adapter.icon} alt={wallet.adapter.name} className="w-5 h-5 object-contain rounded" />;
+    }
+    
+    const iconMap: Record<string, string> = {
+      "Phantom": "https://phantom.app/img/logo.png",
+      "Solflare": "https://solflare.com/favicon.ico",
+      "Coinbase Wallet": "https://www.coinbase.com/favicon.ico",
+      "BitKeep": "https://web3.bitget.com/favicon.ico",
+      "Bitget Wallet": "https://web3.bitget.com/favicon.ico",
+    };
+    
+    const iconUrl = iconMap[wallet.adapter.name];
+    return iconUrl 
+      ? <img src={iconUrl} alt={wallet.adapter.name} className="w-5 h-5 object-contain rounded" />
+      : <span className="text-xs font-semibold">{wallet.adapter.name.charAt(0)}</span>;
+  };
+
+  const WalletItem = ({ wallet, isInstalled }: { wallet: WalletWithDisplay; isInstalled: boolean }) => {
+    const { display } = wallet;
+    const isBitgetInstallPrompt = display.id === "bitget" && wallet.adapter.name === "Bitget Install";
+    
+    const walletIcon = wallet.adapter.icon ? (
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden">
         <img
           src={wallet.adapter.icon}
           alt={wallet.adapter.name}
-          className="w-5 h-5 object-contain rounded"
-        />
-      );
-    }
-    
-    // Fallback: extract image URL from display map if available
-    if (display) {
-      const walletName = wallet.adapter.name;
-      if (walletName === "Phantom") {
-        return <img src="https://phantom.app/img/logo.png" alt="Phantom" className="w-5 h-5 object-contain rounded" />;
-      } else if (walletName === "Solflare") {
-        return <img src="https://solflare.com/favicon.ico" alt="Solflare" className="w-5 h-5 object-contain rounded" />;
-      } else if (walletName === "Coinbase Wallet") {
-        return <img src="https://www.coinbase.com/favicon.ico" alt="Coinbase" className="w-5 h-5 object-contain rounded" />;
-      } else if (walletName === "BitKeep" || walletName === "Bitget Wallet") {
-        return <img src="https://web3.bitget.com/favicon.ico" alt="Bitget" className="w-5 h-5 object-contain rounded" />;
-      }
-      // For wallets without images (Avana, Alpha), show simple text
-      return <span className="text-xs font-semibold">{walletName.charAt(0)}</span>;
-    }
-    
-    return null;
-  };
-
-  const WalletItem = ({
-    wallet,
-    isInstalled,
-  }: {
-    wallet: WalletWithDisplay;
-    isInstalled: boolean;
-  }) => {
-    const display = wallet.display;
-    const adapterIcon = wallet.adapter.icon;
-    
-    // Use adapter icon if available, otherwise fall back to display icon
-    const walletIcon = adapterIcon ? (
-      <div className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden">
-        <img
-          src={adapterIcon}
-          alt={wallet.adapter.name}
           className="w-full h-full object-contain"
-          onError={(e) => {
-            // Fallback to display icon if adapter icon fails to load
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-          }}
+          onError={(e) => (e.target as HTMLImageElement).style.display = "none"}
         />
       </div>
-    ) : (
-      display.icon
-    );
+    ) : display.icon;
 
-    const isBitgetInstallPrompt = display.id === "bitget" && wallet.adapter.name === "Bitget Install";
+    const handleClick = () => {
+      if (isBitgetInstallPrompt) {
+        setSelectedWalletForInstall(display.id);
+        setConnectionStatus("idle");
+        setSelectedWalletName(null);
+      } else if (isInstalled) {
+        setSelectedWalletForInstall(null);
+        setSelectedWalletName(wallet.adapter.name);
+        requestAnimationFrame(() => {
+          setConnectionStatus("connecting");
+          setTimeout(() => select(wallet.adapter.name), 50);
+        });
+      }
+    };
     
     return (
       <button
-        onClick={async () => {
-          console.log("\n🖱️ WALLET CLICKED:");
-          console.log("   Wallet Name:", wallet.adapter.name);
-          console.log("   Display Name:", display.name);
-          console.log("   Is Installed:", isInstalled);
-          console.log("   Ready State:", wallet.readyState);
-          console.log("   Is Bitget Install:", isBitgetInstallPrompt);
-          
-          if (isBitgetInstallPrompt) {
-            console.log("   → Showing Bitget install UI");
-            setSelectedWalletForInstall(display.id);
-            // Clear any previous connection state
-            setConnectionStatus("idle");
-            setSelectedWalletName(null);
-          } else if (isInstalled) {
-            console.log("   → Attempting to connect...");
-            // Clear install UI first
-            setSelectedWalletForInstall(null);
-            
-            // Update both wallet name and status in the same render cycle
-            const walletName = wallet.adapter.name;
-            setSelectedWalletName(walletName);
-            
-            // Force a small delay to ensure state updates, then set connecting
-            requestAnimationFrame(() => {
-              setConnectionStatus("connecting");
-              
-              // Small delay to ensure UI updates before extension popup
-              setTimeout(() => {
-                select(walletName);
-              }, 50);
-            });
-          } else {
-            console.log("   ⚠️ Wallet not installed, ignoring click");
-          }
-        }}
-        className={`w-full flex items-center gap-2.5 rounded-xl py-2 transition-all cursor-pointer px-2 ${
-          isInstalled || isBitgetInstallPrompt
-            ? "hover:shadow-sm hover:bg-zinc-200"
-            : "hover:bg-zinc-200"
+        onClick={handleClick}
+        className={`w-full flex items-center gap-2.5 rounded-xl py-2 px-2 transition-all cursor-pointer ${
+          (isInstalled || isBitgetInstallPrompt) ? "hover:shadow-sm hover:bg-zinc-200" : "hover:bg-zinc-200"
         }`}
       >
         {walletIcon}
-        <div className="flex-1 text-left min-w-0">
-          <span className="font-semibold text-sm text-gray-900 balsamiq-sans-bold">
-            {display.name}
-          </span>
-        </div>
+        <span className="flex-1 text-left font-semibold text-sm text-gray-900 balsamiq-sans-bold">
+          {display.name}
+        </span>
       </button>
     );
   };
 
-  const WalletSection = ({
-    title,
-    wallets,
-    emptyMessage,
-  }: {
-    title: string;
-    wallets: WalletWithDisplay[];
-    emptyMessage?: string;
-  }) => (
+  const WalletSection = ({ title, wallets, emptyMessage }: { title: string; wallets: WalletWithDisplay[]; emptyMessage?: string }) => (
     <div>
-      <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 balsamiq-sans-bold px-2 ${
-        title === "Installed" ? "text-blue-600" : "text-gray-500"
-      }`}>
+      <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 balsamiq-sans-bold px-2 ${title === "Installed" ? "text-blue-600" : "text-gray-500"}`}>
         {title}
       </h4>
       <div className="space-y-1">
         {wallets.length ? (
-          wallets.map((wallet) => {
-            const isInstalled = wallet.readyState === WalletReadyState.Installed;
-            return (
-              <WalletItem 
-                key={wallet.adapter.name} 
-                wallet={wallet} 
-                isInstalled={isInstalled}
-              />
-            );
-          })
+          wallets.map((wallet) => (
+            <WalletItem key={wallet.adapter.name} wallet={wallet} isInstalled={wallet.readyState === WalletReadyState.Installed} />
+          ))
         ) : (
-          emptyMessage && (
-            <div className="text-xs text-gray-500 text-center py-4 font-sans">
-              {emptyMessage}
-            </div>
-          )
+          emptyMessage && <div className="text-xs text-gray-500 text-center py-4 font-sans">{emptyMessage}</div>
         )}
       </div>
     </div>
@@ -464,58 +268,25 @@ export default function ConnectWallet() {
 
   return (
     <>
-      <style jsx>{`
-        @keyframes expandDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px) scaleY(0.95);
-            transform-origin: top center;
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scaleY(1);
-            transform-origin: top center;
-          }
-        }
-
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateX(-8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .dropdown-animate {
-          animation: expandDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .dropdown-item-animate {
-          animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .dropdown-item-animate:nth-child(1) {
-          animation-delay: 0.05s;
-        }
-
-        .dropdown-item-animate:nth-child(2) {
-          animation-delay: 0.1s;
-        }
-      `}</style>
-      
       <div className="relative" ref={dropdownRef}>
         {connected && publicKey ? (
           <div className="relative">
-            <button
+            <motion.button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={`bg-black text-white px-4 py-2.5 font-medium hover:bg-black/90 transition-all duration-200 flex items-center gap-2.5 ${
-                isDropdownOpen 
-                  ? 'rounded-t-lg shadow-lg' 
-                  : 'rounded-lg'
-              }`}
+              className="bg-black text-white px-4 py-2.5 font-medium hover:bg-black/90 flex items-center gap-2.5 shadow-lg"
+              style={{
+                borderTopLeftRadius: 8,
+                borderTopRightRadius: 8,
+              }}
+              animate={{
+                borderBottomLeftRadius: isDropdownOpen ? 0 : 8,
+                borderBottomRightRadius: isDropdownOpen ? 0 : 8,
+              }}
+              transition={{ 
+                duration: 0.25,
+                ease: [0.16, 1, 0.3, 1],
+                delay: isDropdownOpen ? 0 : 0.05
+              }}
             >
               <div className="flex items-center justify-center w-5 h-5">
                 {getCurrentWalletIcon()}
@@ -523,45 +294,86 @@ export default function ConnectWallet() {
               <span className="font-mono text-sm tracking-tight">
                 {truncateAddress(publicKey.toBase58())}
               </span>
-              <svg 
-                className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+              <motion.svg 
+                className="w-4 h-4" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
+                animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+              </motion.svg>
+            </motion.button>
             
-            {isDropdownOpen && (
-              <div className="absolute top-[calc(100%-4px)] left-0 right-0 bg-black text-white rounded-b-lg shadow-xl overflow-hidden z-50 dropdown-animate">
-                <div className="border-t border-gray-700"></div>
-                <button
-                  onClick={handleCopyAddress}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors flex items-center gap-2.5 text-sm dropdown-item-animate"
+            <AnimatePresence mode="wait">
+              {isDropdownOpen && (
+                <motion.div
+                  initial={{ 
+                    opacity: 0,
+                    height: 0,
+                    y: -10,
+                  }}
+                  animate={{ 
+                    opacity: 1,
+                    height: "auto",
+                    y: 0,
+                  }}
+                  exit={{ 
+                    opacity: 0,
+                    height: 0,
+                    y: -10,
+                  }}
+                  transition={{ 
+                    duration: 0.2,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="absolute top-[calc(100%-4px)] left-0 right-0 bg-black text-white rounded-b-lg shadow-xl overflow-hidden z-50 origin-top"
                 >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4 text-green-400" />
-                      <span className="text-green-400 font-medium">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 text-gray-300" />
-                      <span className="text-gray-100">Copy Address</span>
-                    </>
-                  )}
-                </button>
-                <div className="border-t border-gray-700"></div>
-                <button
-                  onClick={handleDisconnect}
-                  className="w-full px-4 py-3 text-left hover:bg-red-900/20 transition-colors flex items-center gap-2.5 text-sm text-red-400 dropdown-item-animate"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Disconnect</span>
-                </button>
-              </div>
-            )}
+                  <div className="border-t border-gray-700"></div>
+                  <motion.button
+                    onClick={handleCopyAddress}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors flex items-center gap-2.5 text-sm"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ 
+                      duration: 0.15,
+                      delay: 0.05,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 text-green-400" />
+                        <span className="text-green-400 font-medium">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 text-gray-300" />
+                        <span className="text-gray-100">Copy Address</span>
+                      </>
+                    )}
+                  </motion.button>
+                  <div className="border-t border-gray-700"></div>
+                  <motion.button
+                    onClick={handleDisconnect}
+                    className="w-full px-4 py-3 text-left hover:bg-red-900/20 transition-colors flex items-center gap-2.5 text-sm text-red-400"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ 
+                      duration: 0.15,
+                      delay: 0.08,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Disconnect</span>
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
           <button
@@ -604,28 +416,13 @@ export default function ConnectWallet() {
             <section className="flex-1 overflow-hidden flex items-center justify-center p-6">
               {selectedWalletForInstall === "bitget" ? (
                 <div className="h-full flex flex-col w-full max-w-md">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4 balsamiq-sans-bold">
-                    Connect to Bitget
-                  </h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4 balsamiq-sans-bold">Connect to Bitget</h3>
                   <div className="flex-1 flex items-center justify-center pb-8">
-                    <img 
-                      src="https://web3.bitget.com/favicon.ico" 
-                      alt="Bitget" 
-                      className="w-32 h-32 object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                      }}
-                    />
+                    <img src="https://web3.bitget.com/favicon.ico" alt="Bitget" className="w-32 h-32 object-contain" onError={(e) => (e.target as HTMLImageElement).style.display = "none"} />
                   </div>
                   <div className="flex items-center justify-between text-sm pt-2">
-                    <span className="text-gray-600 balsamiq-sans-regular">
-                      Don&apos;t have Bitget?
-                    </span>
-                    <button
-                      onClick={() => window.open("https://web3.bitget.com/", "_blank", "noopener")}
-                      className="px-4 py-1.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors text-xs balsamiq-sans-bold"
-                    >
+                    <span className="text-gray-600 balsamiq-sans-regular">Don&apos;t have Bitget?</span>
+                    <button onClick={() => window.open("https://web3.bitget.com/", "_blank", "noopener")} className="px-4 py-1.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors text-xs balsamiq-sans-bold">
                       Get App!
                     </button>
                   </div>
@@ -638,9 +435,7 @@ export default function ConnectWallet() {
                       <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">
                         Connecting {walletDisplayMap[selectedWalletName]?.name || selectedWalletName} wallet...
                       </h3>
-                      <p className="text-sm text-gray-600 text-center balsamiq-sans-regular">
-                        Please approve the connection request in your wallet
-                      </p>
+                      <p className="text-sm text-gray-600 text-center balsamiq-sans-regular">Please approve the connection request in your wallet</p>
                     </>
                   )}
                   {connectionStatus === "connected" && (
@@ -650,23 +445,11 @@ export default function ConnectWallet() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">
-                        You are connected!
-                      </h3>
-                      <p className="text-sm text-gray-600 text-center mb-4 balsamiq-sans-regular">
-                        Your wallet is now connected to this application
-                      </p>
-                      {publicKey && (
-                        <div className="text-xs text-gray-500 font-mono break-all text-center px-4">
-                          {publicKey.toBase58()}
-                        </div>
-                      )}
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">You are connected!</h3>
+                      <p className="text-sm text-gray-600 text-center mb-4 balsamiq-sans-regular">Your wallet is now connected to this application</p>
+                      {publicKey && <div className="text-xs text-gray-500 font-mono break-all text-center px-4">{publicKey.toBase58()}</div>}
                       <button
-                        onClick={() => {
-                          setIsModalOpen(false);
-                          setConnectionStatus("idle");
-                          setSelectedWalletName(null);
-                        }}
+                        onClick={() => { setIsModalOpen(false); setConnectionStatus("idle"); setSelectedWalletName(null); }}
                         className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors balsamiq-sans-bold"
                       >
                         Continue
@@ -680,23 +463,14 @@ export default function ConnectWallet() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">
-                        Connection Failed!
-                      </h3>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">Connection Failed!</h3>
                       <p className="text-sm text-gray-600 text-center mb-4 balsamiq-sans-regular">
                         Connection to {walletDisplayMap[selectedWalletName]?.name || selectedWalletName} was canceled. Please try again.
                       </p>
                       <button
                         onClick={() => {
-                          if (selectedWalletName) {
-                            console.log("🔄 Retrying connection to:", selectedWalletName);
-                            // Find the wallet and call select with the actual adapter name
-                            const walletToRetry = installedWallets.find(w => w.adapter.name === selectedWalletName);
-                            if (walletToRetry) {
-                              setConnectionStatus("connecting");
-                              select(walletToRetry.adapter.name);
-                            }
-                          }
+                          const walletToRetry = installedWallets.find(w => w.adapter.name === selectedWalletName);
+                          if (walletToRetry) { setConnectionStatus("connecting"); select(walletToRetry.adapter.name); }
                         }}
                         className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors balsamiq-sans-bold"
                       >
@@ -707,30 +481,14 @@ export default function ConnectWallet() {
                 </div>
               ) : (
                 <div className="max-w-sm space-y-4 flex flex-col items-center text-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 balsamiq-sans-bold">
-                      What is a Wallet?
-                    </h3>
-                  </div>
-
-                  <div className="w-full flex flex-col items-center">
-                    <img 
-                      src="/logo.png" 
-                      alt="Wallet preview" 
-                      className="w-40 h-40 rounded-[48px] mb-4 object-cover shadow-sm"
-                    />
-                    <p className="text-sm text-gray-600 leading-relaxed balsamiq-sans-regular max-w-[280px]">
-                      Your secure gateway to store, send, and receive digital assets.
-                    </p>
-                  </div>
-
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 balsamiq-sans-bold">What is a Wallet?</h3>
+                  <img src="/logo.png" alt="Wallet preview" className="w-40 h-40 rounded-[48px] mb-4 object-cover shadow-sm" />
+                  <p className="text-sm text-gray-600 leading-relaxed balsamiq-sans-regular max-w-[280px]">
+                    Your secure gateway to store, send, and receive digital assets.
+                  </p>
                   <div className="pt-2 space-y-2 flex flex-col items-center w-full">
-                    <button className="bg-blue-500 text-black py-2.5 px-6 rounded-lg font-medium hover:bg-blue-600 transition-colors text-sm balsamiq-sans-bold">
-                      Get a Wallet
-                    </button>
-                    <button className="text-blue-500 font-medium hover:text-blue-600 transition-colors text-sm balsamiq-sans-bold">
-                      Learn More
-                    </button>
+                    <button className="bg-blue-500 text-black py-2.5 px-6 rounded-lg font-medium hover:bg-blue-600 transition-colors text-sm balsamiq-sans-bold">Get a Wallet</button>
+                    <button className="text-blue-500 font-medium hover:text-blue-600 transition-colors text-sm balsamiq-sans-bold">Learn More</button>
                   </div>
                 </div>
               )}
