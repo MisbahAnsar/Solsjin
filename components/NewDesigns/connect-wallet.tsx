@@ -119,6 +119,48 @@ const walletDisplayMap: Record<string, WalletDisplay> = {
     ),
     category: "more",
   },
+  BitKeep: {
+    id: "bitget",
+    name: "Bitget",
+    icon: (
+      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
+        <img
+          src="https://web3.bitget.com/favicon.ico"
+          alt="Bitget"
+          className="w-full h-full object-contain rounded-lg"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
+            if (target.parentElement) {
+              target.parentElement.textContent = "B";
+            }
+          }}
+        />
+      </div>
+    ),
+    category: "more",
+  },
+  "Bitget Wallet": {
+    id: "bitget",
+    name: "Bitget",
+    icon: (
+      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-xs shadow-inner">
+        <img
+          src="https://web3.bitget.com/favicon.ico"
+          alt="Bitget"
+          className="w-full h-full object-contain rounded-lg"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
+            if (target.parentElement) {
+              target.parentElement.textContent = "B";
+            }
+          }}
+        />
+      </div>
+    ),
+    category: "more",
+  },
 };
 
 export default function ConnectWallet() {
@@ -126,21 +168,36 @@ export default function ConnectWallet() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWalletName, setSelectedWalletName] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "retry">("idle");
+  const [selectedWalletForInstall, setSelectedWalletForInstall] = useState<string | null>(null);
 
+  // Separate wallets by readyState (following the reference pattern)
   const { installedWallets, popularWallets, moreWallets } = useMemo(() => {
     type WalletWithDisplay = Wallet & { display: WalletDisplay };
     const installed: WalletWithDisplay[] = [];
     const popular: WalletWithDisplay[] = [];
     const more: WalletWithDisplay[] = [];
 
+    console.log("=== WALLET DETECTION DEBUG ===");
+    console.log("Total wallets from adapter:", wallets.length);
+    
     for (const wallet of wallets) {
+      console.log(`\n📍 Wallet: ${wallet.adapter.name}`);
+      console.log(`   ReadyState: ${wallet.readyState} (Installed = ${WalletReadyState.Installed})`);
+      console.log(`   Is Installed: ${wallet.readyState === WalletReadyState.Installed}`);
+      
       const display = walletDisplayMap[wallet.adapter.name];
-      if (!display) continue;
+      if (!display) {
+        console.log(`   ⚠️ No display mapping found`);
+        continue;
+      }
 
       const walletWithDisplay: WalletWithDisplay = { ...wallet, display };
 
       if (wallet.readyState === WalletReadyState.Installed) {
+        console.log(`   ✅ Adding to INSTALLED section`);
         installed.push(walletWithDisplay);
+      } else {
+        console.log(`   ❌ NOT installed (skipping)`);
       }
 
       if (display.category === "popular") {
@@ -150,12 +207,44 @@ export default function ConnectWallet() {
       }
     }
 
+    console.log("\n📊 FINAL RESULTS:");
+    console.log("Installed wallets:", installed.map(w => w.adapter.name));
+    console.log("Popular wallets:", popular.map(w => w.adapter.name));
+    console.log("More wallets:", more.map(w => w.adapter.name));
+
+    // Add manual Bitget install option if not already in any list
+    const hasBitgetEntry =
+      installed.some((wallet) => wallet.display.id === "bitget") ||
+      popular.some((wallet) => wallet.display.id === "bitget") ||
+      more.some((wallet) => wallet.display.id === "bitget");
+
+    if (!hasBitgetEntry && walletDisplayMap.BitKeep) {
+      console.log("⚠️ Bitget not detected, adding manual install option");
+      const bitgetDisplay = walletDisplayMap.BitKeep;
+      const manualBitget: WalletWithDisplay = {
+        adapter: {
+          name: "Bitget Install",
+          icon: "",
+          url: "https://web3.bitget.com/",
+        } as any,
+        readyState: WalletReadyState.NotDetected,
+        display: bitgetDisplay,
+      } as WalletWithDisplay;
+      more.push(manualBitget);
+    } else {
+      console.log("✅ Bitget wallet detected in lists");
+    }
+
+    console.log("=== END DEBUG ===\n");
+
     return { installedWallets: installed, popularWallets: popular, moreWallets: more };
   }, [wallets]);
 
+  // Track connection status changes
   useEffect(() => {
     if (!selectedWalletName) return;
     
+    // Only handle status for installed wallets
     const isInstalledWallet = installedWallets.some(w => w.adapter.name === selectedWalletName);
     if (!isInstalledWallet) return;
 
@@ -164,14 +253,17 @@ export default function ConnectWallet() {
     } else if (connected && publicKey && selectedWalletName && connectionStatus === "connecting") {
       setConnectionStatus("connected");
     } else if (!connecting && !connected && selectedWalletName && connectionStatus === "connecting" && !publicKey) {
+      // User canceled/left in middle (was connecting but now not connected)
       setConnectionStatus("retry");
     }
   }, [connecting, connected, publicKey, selectedWalletName, connectionStatus, installedWallets]);
 
+  // Reset status when modal closes
   useEffect(() => {
     if (!isModalOpen) {
       setConnectionStatus("idle");
       setSelectedWalletName(null);
+      setSelectedWalletForInstall(null);
     }
   }, [isModalOpen]);
 
@@ -203,17 +295,48 @@ export default function ConnectWallet() {
       display.icon
     );
 
+    const isBitgetInstallPrompt = display.id === "bitget" && wallet.adapter.name === "Bitget Install";
+    
     return (
       <button
-        onClick={() => {
-          if (isInstalled) {
-            setSelectedWalletName(wallet.adapter.name);
-            select(wallet.adapter.name);
-            // Don't close modal immediately - wait for connection status
+        onClick={async () => {
+          console.log("\n🖱️ WALLET CLICKED:");
+          console.log("   Wallet Name:", wallet.adapter.name);
+          console.log("   Display Name:", display.name);
+          console.log("   Is Installed:", isInstalled);
+          console.log("   Ready State:", wallet.readyState);
+          console.log("   Is Bitget Install:", isBitgetInstallPrompt);
+          
+          if (isBitgetInstallPrompt) {
+            console.log("   → Showing Bitget install UI");
+            setSelectedWalletForInstall(display.id);
+            // Clear any previous connection state
+            setConnectionStatus("idle");
+            setSelectedWalletName(null);
+          } else if (isInstalled) {
+            console.log("   → Attempting to connect...");
+            // Clear install UI first
+            setSelectedWalletForInstall(null);
+            
+            // Update both wallet name and status in the same render cycle
+            const walletName = wallet.adapter.name;
+            setSelectedWalletName(walletName);
+            
+            // Force a small delay to ensure state updates, then set connecting
+            requestAnimationFrame(() => {
+              setConnectionStatus("connecting");
+              
+              // Small delay to ensure UI updates before extension popup
+              setTimeout(() => {
+                select(walletName);
+              }, 50);
+            });
+          } else {
+            console.log("   ⚠️ Wallet not installed, ignoring click");
           }
         }}
         className={`w-full flex items-center gap-2.5 rounded-xl py-2 transition-all cursor-pointer px-2 ${
-          isInstalled
+          isInstalled || isBitgetInstallPrompt
             ? "hover:shadow-sm hover:bg-zinc-200"
             : "hover:bg-zinc-200"
         }`}
@@ -268,12 +391,19 @@ export default function ConnectWallet() {
 
   return (
     <>
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-black/90 transition-colors"
-      >
-        Connect Wallet
-      </button>
+      <div className="flex flex-col items-start gap-2">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-black/90 transition-colors"
+        >
+          {connected && publicKey ? "Wallet Connected" : "Connect Wallet"}
+        </button>
+        {connected && publicKey && (
+          <div className="text-xs text-gray-600 font-mono">
+            Connected: {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+          </div>
+        )}
+      </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="flex flex-col h-full font-sans p-4 box-border">
@@ -292,7 +422,6 @@ export default function ConnectWallet() {
 
           <div className="flex flex-1 overflow-hidden min-h-0">
             <aside className="w-52 border-r border-gray-200 flex-shrink-0 flex flex-col min-h-0 overflow-hidden">
-
               <div className="flex-1 overflow-y-auto py-4 pr-1 space-y-4 min-h-0">
                 <WalletSection
                   title="Installed"
@@ -304,8 +433,36 @@ export default function ConnectWallet() {
               </div>
             </aside>
 
-            <section className="flex-1 overflow-hidden">
-              {selectedWalletName && installedWallets.some(w => w.adapter.name === selectedWalletName) && connectionStatus !== "idle" ? (
+            <section className="flex-1 overflow-hidden flex items-center justify-center p-6">
+              {selectedWalletForInstall === "bitget" ? (
+                <div className="h-full flex flex-col w-full max-w-md">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4 balsamiq-sans-bold">
+                    Connect to Bitget
+                  </h3>
+                  <div className="flex-1 flex items-center justify-center pb-8">
+                    <img 
+                      src="https://web3.bitget.com/favicon.ico" 
+                      alt="Bitget" 
+                      className="w-32 h-32 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-sm pt-2">
+                    <span className="text-gray-600 balsamiq-sans-regular">
+                      Don&apos;t have Bitget?
+                    </span>
+                    <button
+                      onClick={() => window.open("https://web3.bitget.com/", "_blank", "noopener")}
+                      className="px-4 py-1.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors text-xs balsamiq-sans-bold"
+                    >
+                      Get App!
+                    </button>
+                  </div>
+                </div>
+              ) : selectedWalletName && installedWallets.some(w => w.adapter.name === selectedWalletName) && connectionStatus !== "idle" ? (
                 <div className="max-w-md space-y-4 flex flex-col items-center justify-center min-h-[300px]">
                   {connectionStatus === "connecting" && (
                     <>
@@ -331,6 +488,11 @@ export default function ConnectWallet() {
                       <p className="text-sm text-gray-600 text-center mb-4 balsamiq-sans-regular">
                         Your wallet is now connected to this application
                       </p>
+                      {publicKey && (
+                        <div className="text-xs text-gray-500 font-mono break-all text-center px-4">
+                          {publicKey.toBase58()}
+                        </div>
+                      )}
                       <button
                         onClick={() => {
                           setIsModalOpen(false);
@@ -351,15 +513,22 @@ export default function ConnectWallet() {
                         </svg>
                       </div>
                       <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">
-                        Retry!
+                        Connection Failed!
                       </h3>
                       <p className="text-sm text-gray-600 text-center mb-4 balsamiq-sans-regular">
-                        Connection was canceled. Please try again.
+                        Connection to {walletDisplayMap[selectedWalletName]?.name || selectedWalletName} was canceled. Please try again.
                       </p>
                       <button
                         onClick={() => {
-                          setConnectionStatus("idle");
-                          setSelectedWalletName(null);
+                          if (selectedWalletName) {
+                            console.log("🔄 Retrying connection to:", selectedWalletName);
+                            // Find the wallet and call select with the actual adapter name
+                            const walletToRetry = installedWallets.find(w => w.adapter.name === selectedWalletName);
+                            if (walletToRetry) {
+                              setConnectionStatus("connecting");
+                              select(walletToRetry.adapter.name);
+                            }
+                          }
                         }}
                         className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors balsamiq-sans-bold"
                       >
@@ -380,7 +549,7 @@ export default function ConnectWallet() {
                     <img 
                       src="/logo.png" 
                       alt="Wallet preview" 
-                      className="w-40 h-40 rounded-xl mb-4 object-cover shadow-sm"
+                      className="w-40 h-40 rounded-[48px] mb-4 object-cover shadow-sm"
                     />
                     <p className="text-sm text-gray-600 leading-relaxed balsamiq-sans-regular max-w-[280px]">
                       Your secure gateway to store, send, and receive digital assets.
