@@ -34,6 +34,7 @@ const createWalletIcon = (imgSrc: string, alt: string, gradient: string, fallbac
   </div>
 );
 
+// Static display configuration for known wallets
 const walletDisplayMap: Record<string, WalletDisplay> = {
   Phantom: {
     id: "phantom",
@@ -83,12 +84,13 @@ export default function ConnectWallet() {
   const { wallets, select, connecting, connected, publicKey, wallet, disconnect } = useWallet();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWalletName, setSelectedWalletName] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "retry">("idle");
+  const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected">("idle");
   const [selectedWalletForInstall, setSelectedWalletForInstall] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Pre-compute wallet lists for the sidebar
   const { installedWallets, popularWallets, moreWallets } = useMemo(() => {
     type WalletWithDisplay = Wallet & { display: WalletDisplay };
     const installed: WalletWithDisplay[] = [];
@@ -136,7 +138,7 @@ export default function ConnectWallet() {
       setConnectionStatus("connected");
     } else if (!connecting && !connected && selectedWalletName && connectionStatus === "connecting" && !publicKey) {
       // User canceled/left in middle (was connecting but now not connected)
-      setConnectionStatus("retry");
+      setConnectionStatus("idle");
     }
   }, [connecting, connected, publicKey, selectedWalletName, connectionStatus, installedWallets]);
 
@@ -453,28 +455,6 @@ export default function ConnectWallet() {
                         className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors balsamiq-sans-bold"
                       >
                         Continue
-                      </button>
-                    </>
-                  )}
-                  {connectionStatus === "retry" && (
-                    <>
-                      <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 balsamiq-sans-bold">Connection Failed!</h3>
-                      <p className="text-sm text-gray-600 text-center mb-4 balsamiq-sans-regular">
-                        Connection to {walletDisplayMap[selectedWalletName]?.name || selectedWalletName} was canceled. Please try again.
-                      </p>
-                      <button
-                        onClick={() => {
-                          const walletToRetry = installedWallets.find(w => w.adapter.name === selectedWalletName);
-                          if (walletToRetry) { setConnectionStatus("connecting"); select(walletToRetry.adapter.name); }
-                        }}
-                        className="px-6 py-2 bg-[#C4F582] text-black rounded-lg font-medium hover:bg-[#b5e673] transition-colors balsamiq-sans-bold"
-                      >
-                        Try Again
                       </button>
                     </>
                   )}

@@ -29,7 +29,7 @@ export default function WalletProvider({ children }: WalletProviderProps) {
     []
   );
 
-  const endpoint = useMemo(() => "https://api.mainnet-beta.solana.com", []);
+  const endpoint = useMemo(() => "https://api.devnet.solana.com", []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>

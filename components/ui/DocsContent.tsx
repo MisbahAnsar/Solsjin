@@ -4,6 +4,7 @@
 "use client";
 
 import ConnectWallet from "@/components/NewDesigns/connect-wallet";
+import WalletDropdown from "@/components/NewDesigns/wallet-dropdown";
 
 interface DocsContentProps {
   activeItem: string;
@@ -12,7 +13,7 @@ interface DocsContentProps {
 export default function DocsContent({ activeItem }: DocsContentProps) {
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <ConnectWallet />
+      {activeItem === "wallet-dropdown" ? <WalletDropdown /> : <ConnectWallet />}
     </div>
   );
 }
